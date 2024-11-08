@@ -144,7 +144,7 @@ class TableListClass():
             elif category.name == "Business":
                 tables.extend(["Customer", "Employee", "Invoice", "InvoiceLine"])
             elif category.name == "Hospital":
-                tables.extend(["Patient","Patients","Providers","HospitalDepartment","PatientAdmissionHistory","StaffUtilization"])    
+                tables.extend(["HealthCareProvider","Patient","HospitalDepartment","PatientAdmissionHistory","StaffUtilization"])    
         return tables
     
     def table_detail_list_call(self):
