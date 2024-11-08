@@ -47,7 +47,7 @@ def get_oauth_token():
         print(f"An error occurred while retrieving the access token: {e}")
         return None
 
-# Function to get data from Reltio using OAuth token and write to CSV
+# Function to get data from Reltio using OAuth token and handle pagination
 def get_reltio_data():
     access_token = get_oauth_token()
     if not access_token:
@@ -59,39 +59,50 @@ def get_reltio_data():
         "Authorization": f"Bearer {access_token}",
     }
 
-    # Construct the data endpoint URL
-    data_endpoint = f"{base_url}/entities?filter=(equals(type,'{patient_data_endpoint}'))"
+    # Construct the initial data endpoint URL
+    #data_endpoint = f"{base_url}/entities?filter=(equals(type,'{patient_data_endpoint}'))"
+    data_endpoint = f"{base_url}/entities?filter=(equals(type,'{patient_data_endpoint}'))&pageSize=10000"
+    cursor = None
+    all_records = []
 
     try:
-        response = requests.get(data_endpoint, headers=data_headers)
-        if response.status_code == 200:
-            data = response.json()
-            print("Data retrieved successfully.")
-
-            # Check if the data is a list or a dictionary
-            if isinstance(data, list):
-                records = data
-            elif isinstance(data, dict) and "results" in data:
-                records = data["results"]
+        while True:
+            if cursor:
+                paginated_endpoint = f"{data_endpoint}&cursor={cursor}"
             else:
-                print("Unexpected data format.")
-                return
+                paginated_endpoint = data_endpoint
 
-            # Convert JSON to CSV and write to file
-            with open("outputjson.csv", mode="w", newline="") as file:
-                # Check if records exist
-                if records:
-                    # Use the keys of the first record as the header
-                    headers = records[0].keys()
-                    writer = csv.DictWriter(file, fieldnames=headers)
-                    writer.writeheader()
-                    writer.writerows(records)
-                    print("Data written to output.csv successfully.")
+            response = requests.get(paginated_endpoint, headers=data_headers)
+            if response.status_code == 200:
+                data = response.json()
+                print("Data retrieved successfully.")
+
+                # Ensure data is a list
+                if isinstance(data, list):
+                    all_records.extend(data)
                 else:
-                    print("No records found in the data.")
+                    print("Unexpected data format.")
+                    break
 
+                # Check if more pages are available
+                cursor = response.headers.get("Next-Page-Cursor")
+                if not cursor:
+                    break  # Exit loop if no more pages
+
+            else:
+                print(f"Failed to retrieve data: {response.status_code} - {response.text}")
+                break
+
+        # Write all records to CSV
+        if all_records:
+            with open("outputjson.csv", mode="w", newline="") as file:
+                headers = all_records[0].keys() if all_records else []
+                writer = csv.DictWriter(file, fieldnames=headers)
+                writer.writeheader()
+                writer.writerows(all_records)
+                print("Data written to outputjson.csv successfully.")
         else:
-            print(f"Failed to retrieve data: {response.status_code} - {response.text}")
+            print("No records found.")
 
     except Exception as e:
         print(f"An error occurred while retrieving data: {e}")
