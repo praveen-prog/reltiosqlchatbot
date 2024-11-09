@@ -27,6 +27,7 @@ with open(csv_file_path, newline='') as csvfile:
     
     # Generate the CREATE TABLE SQL statement dynamically based on column names
     create_table_query = f"CREATE TABLE IF NOT EXISTS {table_name} ({', '.join([f'{col} TEXT' for col in columns])});"
+    #print(create_table_query)
     cursor.execute(create_table_query)
 
     # Prepare the INSERT INTO SQL statement
