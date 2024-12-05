@@ -7,6 +7,8 @@ conda activate sqlbotenv
 pip install -r requirements.txt
 
 
-Wheneve new table is added,helper.py need to be added with that table name for query.
+Run python3 apicsvcall01.py for each entity type API call.
+Once completed,run python3 apicsvcal02.py
 
-reltioconn-4.py need to run  at last to copy the DB to src directory
+Note: Wheneve new table is added,helper.py need to be added with that table name for query.
+
